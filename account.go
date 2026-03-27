@@ -8,10 +8,10 @@ import (
 
 // CreateAccountRequest represents a request to create a new account
 type CreateAccountRequest struct {
-	WalletID string `json:"wallet_id"`
-	Chain    string `json:"chain"`
-	Network  string `json:"network"`
-	Label    string `json:"label,omitempty"`
+	WalletID    string `json:"wallet_id"`
+	Chain       string `json:"chain"`
+	AccountType string `json:"account_type,omitempty"`
+	Label       string `json:"label,omitempty"`
 }
 
 // Account represents an account in a wallet
@@ -20,7 +20,6 @@ type Account struct {
 	WalletID    string `json:"wallet_id"`
 	ClientID    string `json:"client_id"`
 	Address     string `json:"address"`
-	Chain       string `json:"chain"`
 	Network     string `json:"network"`
 	AddressType string `json:"address_type"`
 	Label       string `json:"label"`

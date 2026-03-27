@@ -22,7 +22,7 @@ Obtain a token via `POST /api/v1/auth/token` using API Key and API Secret. The S
 {
   "wallet_id": "a1b2c3d4-...",
   "wallet_name": "My Wallet",
-  "status": "active",
+  "status": "PROGRESSING",
   "created_at": "2025-01-15T10:30:45+08:00"
 }
 ```
@@ -127,7 +127,8 @@ Issue a JWT token. **No authentication required.**
   "client": {
     "client_id": "c_01HXYZ...",
     "client_name": "Acme Corp",
-    "status": "active",
+    "status": "ACTIVE",
+    "subscription_tier": "",
     "max_wallets": 10
   }
 }
@@ -149,13 +150,25 @@ Get authenticated client information.
 
 ```json
 {
-  "client_id": "c_01HXYZ..."
+  "client_id": "c_01HXYZ...",
+  "client_name": "",
+  "status": "",
+  "subscription_tier": "",
+  "max_wallets": 0
 }
 ```
 
 #### POST /auth/refresh
 
 Refresh an existing JWT token.
+
+> This route is JWT-protected in the gateway and the refresh flow is not currently implemented. Request a new JWT via `POST /auth/token` instead.
+
+**Request Headers:**
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | Bearer JWT token |
 
 **Request Body:**
 
@@ -169,22 +182,12 @@ Refresh an existing JWT token.
 |-------|------|----------|-------------|
 | `refresh_token` | string | Yes | Refresh token |
 
-**Success Response (200):**
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expires_in": 1800,
-  "token_type": "Bearer"
-}
-```
-
 **Error Responses:**
 
 | HTTP | code | Condition |
 |------|------|-----------|
 | 400 | `invalid_parameter` | Missing refresh_token |
-| 401 | `unauthorized` | Invalid or expired refresh token |
+| 401 | `unauthorized` | Route requires JWT auth and refresh is not currently implemented |
 
 #### POST /auth/logout
 
@@ -230,12 +233,14 @@ Create a new MPC wallet.
   "client_id": "c_01HXYZ...",
   "wallet_name": "My Wallet",
   "description": "Optional description",
-  "status": "active",
-  "key_status": "generating",
+  "status": "PROGRESSING",
+  "key_status": "GENERATING",
   "created_at": "2025-01-15T10:30:45+08:00",
   "updated_at": "2025-01-15T10:30:45+08:00"
 }
 ```
+
+Wait until both `status` and `key_status` become `ACTIVE` before creating accounts or initiating transfers.
 
 **Error Responses:**
 
@@ -263,8 +268,8 @@ Get wallet details by ID.
   "client_id": "c_01HXYZ...",
   "wallet_name": "My Wallet",
   "description": "",
-  "status": "active",
-  "key_status": "ready",
+  "status": "ACTIVE",
+  "key_status": "ACTIVE",
   "created_at": "2025-01-15T10:30:45+08:00",
   "updated_at": "2025-01-15T10:30:45+08:00"
 }
@@ -298,8 +303,8 @@ List wallets with pagination.
       "client_id": "c_01HXYZ...",
       "wallet_name": "My Wallet",
       "description": "",
-      "status": "active",
-      "key_status": "ready",
+      "status": "ACTIVE",
+      "key_status": "ACTIVE",
       "created_at": "2025-01-15T10:30:45+08:00",
       "updated_at": "2025-01-15T10:30:45+08:00"
     }
@@ -323,7 +328,6 @@ Create a new blockchain account under a wallet.
 {
   "wallet_id": "w_01HXYZ...",
   "chain": "ethereum",
-  "network": "mainnet",
   "label": "Deposit Account"
 }
 ```
@@ -332,12 +336,14 @@ Create a new blockchain account under a wallet.
 |-------|------|----------|-------------|-------------|
 | `wallet_id` | string | Yes | max 36 chars | Parent wallet ID |
 | `chain` | string | Yes | enum | Blockchain (see below) |
-| `network` | string | Yes | `mainnet` \| `testnet` | Target network |
+| `account_type` | string | No | `DEPOSIT` | Optional account type |
 | `label` | string | No | max 100 chars | Account label |
 
-**Supported chains:** `ethereum`, `bsc`, `polygon`, `avalanche`, `arbitrum`, `optimism`, `tron`, `bitcoin`, `solana`
+**Supported chains:** loaded dynamically from the gateway chain registry. Common examples include `ethereum`, `base`, `tron`, `bitcoin`, and `solana`.
 
 > **Note:** EVM-compatible chains (`ethereum`, `bsc`, `polygon`, `avalanche`, `arbitrum`, `optimism`) share the same key derivation and produce the same address. The system handles this internally.
+>
+> The gateway derives `network` from its chain registry. Account responses include `network`, but do not echo the requested `chain`.
 
 **Success Response (200):**
 
@@ -347,7 +353,6 @@ Create a new blockchain account under a wallet.
   "wallet_id": "w_01HXYZ...",
   "client_id": "c_01HXYZ...",
   "address": "0x1a2b3c4d5e6f...",
-  "chain": "ethereum",
   "network": "mainnet",
   "address_type": "DEPOSIT",
   "label": "Deposit Account",
@@ -382,7 +387,6 @@ Get account details by ID.
   "wallet_id": "w_01HXYZ...",
   "client_id": "c_01HXYZ...",
   "address": "0x1a2b3c4d5e6f...",
-  "chain": "evm",
   "network": "mainnet",
   "address_type": "DEPOSIT",
   "label": "Deposit Account",
@@ -420,7 +424,6 @@ List accounts with optional wallet filter and pagination.
       "wallet_id": "w_01HXYZ...",
       "client_id": "c_01HXYZ...",
       "address": "0x1a2b3c4d5e6f...",
-      "chain": "evm",
       "network": "mainnet",
       "address_type": "DEPOSIT",
       "label": "",
@@ -459,9 +462,9 @@ Add an asset (token) to an account. Asset configuration (contract address, decim
 
 **Supported symbols:** `ETH`, `TRX`, `USDT`, `USDC`, `BNB`, `MATIC`, `BTC`, `SOL`
 
-**Supported chains (for `chain` field):** `ethereum`, `bsc`, `polygon`, `avalanche`, `arbitrum`, `optimism`, `solana`
+**Supported chains (for `chain` field):** `ethereum`, `bsc`, `polygon`, `arbitrum`, `optimism`, `avalanche`, `base`
 
-> **When is `chain` required?** EVM accounts can operate across multiple EVM chains. Provide `chain` to specify which chain's asset configuration to use (e.g., USDT on Ethereum vs. USDT on BSC). For Tron accounts, `chain` can be omitted.
+> **When is `chain` required?** EVM accounts can operate across multiple EVM chains. Provide `chain` to specify which asset chain to use. For non-EVM accounts, omit this field.
 
 **Success Response (200):**
 
@@ -605,9 +608,9 @@ Create a transfer transaction. Atomically creates a transaction record and a swe
 |-------|------|----------|-------------|-------------|
 | `from_address` | string | Yes | max 255 chars | Source blockchain address (must belong to the authenticated client) |
 | `to_address` | string | Yes | max 255 chars | Destination blockchain address |
-| `chain` | string | Yes | enum | Blockchain network (see supported chains below) |
+| `chain` | string | Yes | enum | Enabled chain name for the transfer |
 | `token_symbol` | string | Yes | max 20 chars | Token symbol (e.g. `USDT`, `ETH`, `BTC`) |
-| `amount` | string | Yes | > 0 | Transfer amount (decimal string, in user-facing units e.g. "1.5" BTC) |
+| `amount` | string | Yes | > 0 | Transfer amount (decimal string, in user-facing units e.g. "1.5" BTC) and must not exceed the asset's decimal precision |
 | `memo` | string | No | max 100 chars | Optional memo or tag |
 
 **Supported chains:** `ethereum`, `bsc`, `polygon`, `avalanche`, `arbitrum`, `optimism`, `tron`, `bitcoin`, `solana`
@@ -636,7 +639,7 @@ Create a transfer transaction. Atomically creates a transaction record and a swe
 
 | HTTP | code | Condition |
 |------|------|-----------|
-| 400 | `invalid_parameter` | Invalid request body or amount <= 0 |
+| 400 | `invalid_parameter` | Invalid request body, non-positive amount, excessive decimal precision, or identical `from_address` / `to_address` |
 | 400 | `insufficient_balance` | Insufficient available balance |
 | 400 | `invalid_address` | Address format invalid for the asset's chain |
 | 400 | `wallet_not_active` | Wallet is not in active state |
@@ -675,8 +678,9 @@ Get transaction details by ID.
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `transaction_type` | string | Gateway transaction type, for example `TRANSFER`, `X402_SIGN`, or `X402_SETTLE` |
 | `amount` | string | Transaction amount (decimal string) |
-| `status` | string | `PENDING`, `CONFIRMED`, `FAILED` |
+| `status` | string | Gateway transaction status; values depend on the transaction type |
 | `tx_hash` | string | On-chain transaction hash (empty if not yet broadcast) |
 
 **Error Responses:**
@@ -697,11 +701,10 @@ List transactions with optional filters and pagination.
 | `wallet_id` | string | - | max 36 chars | Filter by wallet |
 | `account_id` | string | - | max 36 chars | Filter by account |
 | `chain` | string | - | enum | Filter by chain |
-| `network` | string | - | `mainnet` \| `testnet` | Filter by network |
 | `page` | integer | 1 | min 1 | Page number |
 | `page_size` | integer | 10 | 1-100 | Items per page |
 
-**Supported chains for filter:** `ethereum`, `tron`, `bsc`, `polygon`, `avalanche`, `arbitrum`, `optimism`, `bitcoin`, `solana`
+**Supported chains for filter:** any enabled chain name in the gateway chain registry.
 
 **Success Response (200):**
 
@@ -728,6 +731,8 @@ List transactions with optional filters and pagination.
 }
 ```
 
+`transaction_type` can include `TRANSFER`, `X402_SIGN`, or `X402_SETTLE`. `status` values depend on the transaction type.
+
 ---
 
 ## Quick Start (curl)
@@ -748,7 +753,7 @@ curl -s -X POST https://api.example.com/api/v1/wallets \
 curl -s -X POST https://api.example.com/api/v1/accounts \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"wallet_id":"<wallet_id>","chain":"ethereum","network":"mainnet"}'
+  -d '{"wallet_id":"<wallet_id>","chain":"ethereum"}'
 
 # 4. Add asset
 curl -s -X POST https://api.example.com/api/v1/assets \

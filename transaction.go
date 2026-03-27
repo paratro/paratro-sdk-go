@@ -12,12 +12,12 @@ type Transaction struct {
 	WalletID        string `json:"wallet_id"`
 	ClientID        string `json:"client_id"`
 	Chain           string `json:"chain"`
-	TransactionType string `json:"transaction_type"` // DEPOSIT, TRANSFER, etc.
+	TransactionType string `json:"transaction_type"` // TRANSFER, X402_SIGN, X402_SETTLE, etc.
 	FromAddress     string `json:"from_address"`
 	ToAddress       string `json:"to_address"`
 	TokenSymbol     string `json:"token_symbol"`
 	Amount          string `json:"amount"`
-	Status          string `json:"status"` // PENDING, SUCCESS, FAILED, etc.
+	Status          string `json:"status"` // Values depend on the transaction type.
 	TxHash          string `json:"tx_hash"`
 	CreatedAt       string `json:"created_at"`
 }
@@ -38,7 +38,6 @@ type ListTransactionsRequest struct {
 	WalletID  string `json:"wallet_id,omitempty"`
 	AccountID string `json:"account_id,omitempty"`
 	Chain     string `json:"chain,omitempty"`
-	Network   string `json:"network,omitempty"`
 	Page      int    `json:"page,omitempty"`
 	PageSize  int    `json:"page_size,omitempty"`
 }
@@ -63,9 +62,6 @@ func (s *service) ListTransactions(ctx context.Context, req *ListTransactionsReq
 		}
 		if req.Chain != "" {
 			params["chain"] = req.Chain
-		}
-		if req.Network != "" {
-			params["network"] = req.Network
 		}
 		if req.Page > 0 {
 			params["page"] = strconv.Itoa(req.Page)
