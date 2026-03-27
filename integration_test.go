@@ -138,7 +138,6 @@ func TestAccountCreate(t *testing.T) {
 	a, err := client.Account.CreateAccount(ctx, &CreateAccountRequest{
 		WalletID: activeWalletID,
 		Chain:    "ethereum",
-		Network:  "mainnet",
 		Label:    "SDK Test Account",
 	})
 	if err != nil {

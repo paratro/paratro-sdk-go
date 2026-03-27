@@ -25,6 +25,8 @@ go get github.com/paratro/paratro-sdk-go@latest
 
 **Requirements**: Go 1.21 or higher
 
+New wallets are created asynchronously. Wait until both `status` and `key_status` are `ACTIVE` before creating accounts or transfers. The gateway derives account `network` automatically from the selected `chain`.
+
 ## Quick Start
 
 ```go
@@ -65,7 +67,6 @@ func main() {
     account, err := client.Account.CreateAccount(ctx, &paratro.CreateAccountRequest{
         WalletID: wallet.WalletID,
         Chain:    "ethereum",
-        Network:  "mainnet",
         Label:    "Deposit Account",
     })
     if err != nil {
