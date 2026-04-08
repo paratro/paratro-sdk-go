@@ -27,9 +27,9 @@ type WebhookEvent struct {
 	EventType             string `json:"event_type"`
 	Chain                 string `json:"chain"`
 	TxHash                string `json:"txhash"`
-	Type                  string `json:"type"`      // transfer, erc20_transfer, etc.
-	Status                string `json:"status"`    // CONFIRMING, CONFIRMED, FAILED
+	TransactionType       string `json:"transaction_type"`
 	Direction             string `json:"direction"` // INBOUND, OUTBOUND
+	Status                string `json:"status"`    // CONFIRMING, CONFIRMED, FAILED
 	From                  string `json:"from"`
 	To                    string `json:"to"`
 	Symbol                string `json:"symbol"`
@@ -38,7 +38,6 @@ type WebhookEvent struct {
 	BlockNumber           int64  `json:"block_number"`
 	Confirmations         int    `json:"confirmations"`
 	RequiredConfirmations int    `json:"required_confirmations"`
-	TransactionType       string `json:"transaction_type"`
 	Data                  string `json:"data"`
 	RiskScore             int    `json:"risk_score"`
 }
