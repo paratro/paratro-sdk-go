@@ -27,9 +27,9 @@ type WebhookEvent struct {
 	EventType             string `json:"event_type"`
 	Chain                 string `json:"chain"`
 	TxHash                string `json:"txhash"`
-	Type                  string `json:"type"`                   // transfer, erc20_transfer, etc.
-	Status                string `json:"status"`                 // CONFIRMING, CONFIRMED, FAILED
-	Direction             string `json:"direction"`              // INBOUND, OUTBOUND
+	Type                  string `json:"type"`      // transfer, erc20_transfer, etc.
+	Status                string `json:"status"`    // CONFIRMING, CONFIRMED, FAILED
+	Direction             string `json:"direction"` // INBOUND, OUTBOUND
 	From                  string `json:"from"`
 	To                    string `json:"to"`
 	Symbol                string `json:"symbol"`
