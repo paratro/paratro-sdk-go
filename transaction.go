@@ -19,7 +19,7 @@ type Transaction struct {
 	Amount          string `json:"amount"`
 	Status          string `json:"status"` // Values depend on the transaction type.
 	TxHash          string `json:"tx_hash"`
-	Direction       string `json:"direction"`      // INBOUND, OUTBOUND
+	Direction       string `json:"direction"` // INBOUND, OUTBOUND
 	BlockNumber     int64  `json:"block_number"`
 	Confirmations   int    `json:"confirmations"`
 	CreatedAt       string `json:"created_at"`
