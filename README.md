@@ -113,6 +113,56 @@ func main() {
 }
 ```
 
+## Webhooks
+
+Verify and parse incoming webhook events from Paratro:
+
+```go
+import (
+    "io"
+    "net/http"
+
+    paratro "github.com/paratro/paratro-sdk-go"
+)
+
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+    body, _ := io.ReadAll(r.Body)
+    timestamp := r.Header.Get("X-Paratro-Timestamp")
+    signature := r.Header.Get("X-Paratro-Signature")
+
+    // Verify signature
+    err := paratro.VerifyWebhookSignature(
+        "whsec_your_webhook_secret",
+        timestamp,
+        body,
+        signature,
+        paratro.DefaultWebhookTolerance,
+    )
+    if err != nil {
+        http.Error(w, "Invalid signature", http.StatusUnauthorized)
+        return
+    }
+
+    // Parse event
+    event, err := paratro.ParseWebhookEvent(body)
+    if err != nil {
+        http.Error(w, "Invalid payload", http.StatusBadRequest)
+        return
+    }
+
+    switch event.EventType {
+    case paratro.EventTransactionConfirmed:
+        fmt.Printf("Confirmed: %s %s %s\n", event.TxHash, event.Amount, event.Symbol)
+    case paratro.EventTransactionConfirming:
+        fmt.Printf("Confirming: %s (%d/%d)\n", event.TxHash, event.Confirmations, event.RequiredConfirmations)
+    case paratro.EventTransactionFailed:
+        fmt.Printf("Failed: %s\n", event.TxHash)
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+```
+
 ## Configuration
 
 ```go
@@ -165,6 +215,7 @@ paratro-sdk-go/
 ├── asset.go            # Asset API
 ├── transaction.go      # Transaction API
 ├── transfer.go         # Transfer API
+├── webhook.go          # Webhook verification & event parsing
 ├── version.go          # SDK version
 ├── integration_test.go # Integration tests
 └── docs/               # Documentation
