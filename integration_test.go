@@ -57,6 +57,21 @@ func init() {
 	}
 
 	activeWalletID = os.Getenv("MPC_TEST_WALLET_ID")
+
+	// Auto-discover wallet ID if not set via env
+	if activeWalletID == "" {
+		apiKey := os.Getenv("MPC_API_KEY")
+		apiSecret := os.Getenv("MPC_API_SECRET")
+		if apiKey != "" && apiSecret != "" {
+			c, err := NewMPCClient(apiKey, apiSecret, Sandbox())
+			if err == nil {
+				resp, err := c.Wallet.ListWallets(context.Background(), &ListWalletsRequest{Page: 1, PageSize: 1})
+				if err == nil && len(resp.Items) > 0 {
+					activeWalletID = resp.Items[0].WalletID
+				}
+			}
+		}
+	}
 }
 
 // ============ Wallet Tests ============
