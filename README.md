@@ -14,6 +14,7 @@ Official Go SDK for Paratro MPC Wallet Gateway - A comprehensive Multi-Party Com
 - Asset Management - Support for native tokens and ERC20/TRC20 tokens
 - Transfer - Send funds to external addresses with automatic asset resolution
 - Transaction Tracking - Complete transaction history and status tracking
+- x402 Payments - ERC-3009/Permit2 authorization signing, verification, and settlement
 - Secure - Built-in JWT authentication with automatic token management
 - Webhook - HMAC-SHA256 signed webhook notifications for incoming transactions
 
@@ -98,7 +99,40 @@ func main() {
     }
     fmt.Printf("Transfer: %s (%s)\n", transfer.TxID, transfer.Status)
 
-    // 5. List transactions
+    // 5. x402 Sign (ERC-3009 authorization for agent payments)
+    signResp, err := client.X402.X402Sign(ctx, &paratro.X402SignRequest{
+        FromAddress: account.Address,
+        ToAddress:   "0xcccc...",
+        Chain:       "base",
+        Amount:      "0.10",
+        ValidBefore: 1800000000,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("x402 Signature: v=%d r=%s s=%s\n", *signResp.SignatureV, *signResp.SignatureR, *signResp.SignatureS)
+
+    // 6. x402 Verify (Facilitator: verify a payment signature)
+    verifyResp, err := client.X402.X402Verify(ctx, map[string]interface{}{
+        "x402Version": 2,
+        "paymentPayload": map[string]interface{}{
+            "payload":  payloadFromPayer,
+            "accepted": paymentRequirements,
+        },
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Valid: %v, Payer: %s\n", verifyResp.IsValid, verifyResp.Payer)
+
+    // 7. x402 Settle (Facilitator: execute on-chain settlement)
+    settleResp, err := client.X402.X402Settle(ctx, settlePayload)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Settled: %v, TxHash: %s\n", settleResp.Success, settleResp.Transaction)
+
+    // 8. List transactions
     txList, err := client.Transaction.ListTransactions(ctx, &paratro.ListTransactionsRequest{
         WalletID: wallet.WalletID,
         Page:     1,
@@ -214,11 +248,13 @@ paratro-sdk-go/
 ├── account.go          # Account API
 ├── asset.go            # Asset API
 ├── transaction.go      # Transaction API
-├── transfer.go         # Transfer API
-├── webhook.go          # Webhook verification & event parsing
-├── version.go          # SDK version
-├── integration_test.go # Integration tests
-└── docs/               # Documentation
+├── transfer.go              # Transfer API
+├── x402.go                  # x402 Payment API (Sign, Verify, Settle)
+├── webhook.go               # Webhook verification & event parsing
+├── version.go               # SDK version
+├── integration_test.go      # Integration tests
+├── x402_integration_test.go # x402 integration tests
+└── docs/                    # Documentation
 ```
 
 ### Build & Test
