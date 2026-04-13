@@ -39,7 +39,8 @@ type WebhookEvent struct {
 	Confirmations         int    `json:"confirmations"`
 	RequiredConfirmations int    `json:"required_confirmations"`
 	Data                  string `json:"data"`
-	RiskScore             int    `json:"risk_score"`
+	RiskScore             string `json:"risk_score"`
+	RiskLevel             string `json:"risk_level"`
 }
 
 // VerifyWebhookSignature verifies the HMAC-SHA256 signature of a webhook request.
