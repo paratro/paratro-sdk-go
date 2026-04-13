@@ -267,7 +267,7 @@ go test -v -count=1 ./...
 
 ## Support
 
-- Email: support@paratro.com
+- Email: hello@paratro.com
 - Documentation: https://docs.paratro.com
 - Issues: https://github.com/paratro/paratro-sdk-go/issues
 
