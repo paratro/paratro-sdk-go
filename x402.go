@@ -17,8 +17,9 @@ type X402SignRequest struct {
 }
 
 // X402SignResponse represents the x402 sign result.
+// TxID is the settlement record identifier — the gateway stores this in
+// pto_x402_settlements and surfaces it under json:"tx_id" for backward compat.
 type X402SignResponse struct {
-	AuthID     string  `json:"auth_id"`
 	TxID       string  `json:"tx_id"`
 	Status     string  `json:"status"`
 	Nonce      string  `json:"nonce"`
@@ -54,9 +55,9 @@ type X402SettleStatusResponse struct {
 	Network string `json:"network,omitempty"`
 }
 
-// X402Authorization represents an x402 authorization record.
-type X402Authorization struct {
-	AuthID      string  `json:"auth_id"`
+// X402Settlement represents an x402 authorization record.
+type X402Settlement struct {
+	SettlementID string  `json:"settlement_id"`
 	Status      string  `json:"status"`
 	FromAddress string  `json:"from_address"`
 	ToAddress   string  `json:"to_address"`
@@ -69,9 +70,9 @@ type X402Authorization struct {
 	CreatedAt   string  `json:"created_at"`
 }
 
-// ListX402AuthorizationsResponse represents a paginated list of x402 authorizations.
-type ListX402AuthorizationsResponse struct {
-	Items   []*X402Authorization `json:"data"`
+// ListX402SettlementsResponse represents a paginated list of x402 authorizations.
+type ListX402SettlementsResponse struct {
+	Items   []*X402Settlement `json:"data"`
 	Total   int64                `json:"total"`
 	HasMore bool                 `json:"has_more"`
 }
@@ -86,8 +87,8 @@ func (s *service) X402Sign(ctx context.Context, req *X402SignRequest) (*X402Sign
 	return &response, nil
 }
 
-// X402ListAuthorizations retrieves a paginated list of x402 authorization records.
-func (s *service) X402ListAuthorizations(ctx context.Context, page, pageSize int) (*ListX402AuthorizationsResponse, error) {
+// X402ListSettlements retrieves a paginated list of x402 authorization records.
+func (s *service) X402ListSettlements(ctx context.Context, page, pageSize int) (*ListX402SettlementsResponse, error) {
 	params := make(map[string]string)
 
 	if page > 0 {
@@ -97,8 +98,8 @@ func (s *service) X402ListAuthorizations(ctx context.Context, page, pageSize int
 		params["page_size"] = strconv.Itoa(pageSize)
 	}
 
-	var response ListX402AuthorizationsResponse
-	err := s.client.requestWithQuery(ctx, "/api/v1/x402/transactions", params, &response)
+	var response ListX402SettlementsResponse
+	err := s.client.requestWithQuery(ctx, "/api/v1/x402/settlements", params, &response)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list x402 authorizations: %w", err)
 	}
