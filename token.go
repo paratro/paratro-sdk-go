@@ -103,8 +103,12 @@ func (tm *tokenManager) refreshToken() (string, error) {
 	}
 
 	tm.token = tokResp.Token
-	// Set expiration to 5 minutes before actual expiration for safety
-	tm.expiresAt = time.Now().Add(time.Duration(tokResp.ExpiresIn-300) * time.Second)
+	// Set expiration to 2 minutes before actual expiration for safety
+	expiresIn := tokResp.ExpiresIn
+	if expiresIn <= 0 {
+		expiresIn = 900 // Default 15 minutes
+	}
+	tm.expiresAt = time.Now().Add(time.Duration(expiresIn-120) * time.Second)
 
 	return tm.token, nil
 }
