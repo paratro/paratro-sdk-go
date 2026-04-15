@@ -109,32 +109,3 @@ func (tm *tokenManager) refreshToken() (string, error) {
 	return tm.token, nil
 }
 
-// Logout invalidates the current token
-func (tm *tokenManager) Logout() error {
-	tm.mu.Lock()
-	defer tm.mu.Unlock()
-
-	if tm.token == "" {
-		return nil
-	}
-
-	url := fmt.Sprintf("%s/api/v1/auth/logout", tm.baseURL)
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create logout request: %w", err)
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tm.token))
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to execute logout request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	tm.token = ""
-	tm.expiresAt = time.Time{}
-
-	return nil
-}

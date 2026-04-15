@@ -50,8 +50,6 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    defer client.Logout()
-
     ctx := context.Background()
 
     // 1. Create wallet

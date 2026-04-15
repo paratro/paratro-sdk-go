@@ -369,22 +369,6 @@ func TestCreateTransfer(t *testing.T) {
 	t.Logf("Transfer API tested (expected error: %v)", err)
 }
 
-// ============ Authentication Tests ============
-
-func TestLogout(t *testing.T) {
-	skipIntegration(t)
-	client := getTestClient(t)
-
-	time.Sleep(500 * time.Millisecond)
-
-	err := client.Logout()
-	if err != nil {
-		t.Fatalf("Failed to logout: %v", err)
-	}
-
-	t.Logf("Logout successful")
-}
-
 // ============ Version Tests ============
 
 func TestVersion(t *testing.T) {
