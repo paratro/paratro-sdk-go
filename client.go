@@ -59,11 +59,6 @@ func (c *MPCClient) Config() *Config {
 	return c.config
 }
 
-// Logout logs out from the API
-func (c *MPCClient) Logout() error {
-	return c.tokenManager.Logout()
-}
-
 // service handles API operations for a resource
 type service struct {
 	client *httpClient
