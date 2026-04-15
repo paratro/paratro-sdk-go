@@ -32,21 +32,21 @@ func TestX402Sign(t *testing.T) {
 		return
 	}
 
-	if resp.AuthID == "" {
-		t.Error("Expected auth_id to be set")
+	if resp.TxID == "" {
+		t.Error("Expected tx_id to be set")
 	}
 
-	t.Logf("X402 Sign: auth_id=%s tx_id=%s status=%s", resp.AuthID, resp.TxID, resp.Status)
+	t.Logf("X402 Sign: tx_id=%s id=%s status=%s", resp.TxID, resp.TxID, resp.Status)
 }
 
-func TestX402ListAuthorizations(t *testing.T) {
+func TestX402ListSettlements(t *testing.T) {
 	skipIntegration(t)
 	client := getTestClient(t)
 	ctx := context.Background()
 
 	time.Sleep(500 * time.Millisecond)
 
-	resp, err := client.X402.X402ListAuthorizations(ctx, 1, 20)
+	resp, err := client.X402.X402ListSettlements(ctx, 1, 20)
 	if err != nil {
 		t.Fatalf("Failed to list x402 authorizations: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestX402ListAuthorizations(t *testing.T) {
 	t.Logf("Found %d x402 authorizations (Total: %d, HasMore: %v)", len(resp.Items), resp.Total, resp.HasMore)
 	for i, auth := range resp.Items {
 		if i < 5 {
-			t.Logf("  %d. auth_id=%s status=%s amount=%s", i+1, auth.AuthID, auth.Status, auth.Amount)
+			t.Logf("  %d. settlement_id=%s status=%s amount=%s", i+1, auth.SettlementID, auth.Status, auth.Amount)
 		}
 	}
 }
