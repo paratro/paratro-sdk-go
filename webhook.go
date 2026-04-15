@@ -28,7 +28,6 @@ type WebhookEvent struct {
 	Chain                 string `json:"chain"`
 	TxHash                string `json:"txhash"`
 	TransactionType       string `json:"transaction_type"`
-	Direction             string `json:"direction"` // INBOUND, OUTBOUND
 	Status                string `json:"status"`    // CONFIRMING, CONFIRMED, FAILED
 	From                  string `json:"from"`
 	To                    string `json:"to"`
