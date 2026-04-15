@@ -1,4 +1,4 @@
 package paratro
 
 // Version is the current version of the MPC SDK
-const Version = "1.2.1"
+const Version = "1.3.0"
