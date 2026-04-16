@@ -13,33 +13,44 @@ import (
 
 // Webhook event type constants.
 const (
-	EventTransactionConfirming = "transaction.confirming"
-	EventTransactionConfirmed  = "transaction.confirmed"
-	EventTransactionFailed     = "transaction.failed"
+	EventTransactionConfirming   = "transaction.confirming"
+	EventTransactionConfirmed    = "transaction.confirmed"
+	EventTransactionFailed       = "transaction.failed"
+	EventX402SettlementConfirmed = "x402.settlement.confirmed"
+	EventX402SettlementFailed    = "x402.settlement.failed"
 )
 
 // DefaultWebhookTolerance is the default time tolerance for webhook signatures (5 minutes).
 const DefaultWebhookTolerance = 5 * time.Minute
 
-// WebhookEvent represents a parsed webhook payload.
+// WebhookEvent represents a parsed webhook payload (v2 schema).
 type WebhookEvent struct {
-	ID                    string `json:"id"`
-	EventType             string `json:"event_type"`
-	Chain                 string `json:"chain"`
-	TxHash                string `json:"txhash"`
-	TransactionType       string `json:"transaction_type"`
-	Status                string `json:"status"`    // CONFIRMING, CONFIRMED, FAILED
-	From                  string `json:"from"`
-	To                    string `json:"to"`
-	Symbol                string `json:"symbol"`
-	Amount                string `json:"amount"`
-	Decimals              int    `json:"decimals"`
-	BlockNumber           int64  `json:"block_number"`
-	Confirmations         int    `json:"confirmations"`
-	RequiredConfirmations int    `json:"required_confirmations"`
-	Data                  string `json:"data"`
-	RiskScore             string `json:"risk_score"`
-	RiskLevel             string `json:"risk_level"`
+	EventID               string  `json:"event_id"`
+	EventType             string  `json:"event_type"`
+	EventTime             string  `json:"event_time"`
+	SourceID              string  `json:"source_id"`
+	WalletID              string  `json:"wallet_id"`
+	AccountID             string  `json:"account_id"`
+	Status                string  `json:"status"`
+	TransactionType       string  `json:"transaction_type"`
+	Chain                 string  `json:"chain"`
+	Network               string  `json:"network"`
+	TxHash                string  `json:"txhash"`
+	BlockNumber           uint64  `json:"block_number"`
+	From                  string  `json:"from"`
+	To                    string  `json:"to"`
+	Symbol                string  `json:"symbol"`
+	ContractAddress       string  `json:"contract_address"`
+	Amount                string  `json:"amount"`
+	Decimals              int     `json:"decimals"`
+	Confirmations         uint64  `json:"confirmations"`
+	RequiredConfirmations uint64  `json:"required_confirmations"`
+	CreatedAt             string  `json:"created_at"`
+	ConfirmedAt           *string `json:"confirmed_at"`
+	RiskChecked           bool    `json:"risk_checked"`
+	RiskScore             float64 `json:"risk_score"`
+	RiskLevel             string  `json:"risk_level"`
+	Data                  string  `json:"data"`
 }
 
 // VerifyWebhookSignature verifies the HMAC-SHA256 signature of a webhook request.
