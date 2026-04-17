@@ -23,7 +23,7 @@ type MPCClient struct {
 	Asset       *service
 	Transaction *service
 	X402        *service
-	Whitelist   *service
+	SecurityFactor *service
 }
 
 // NewMPCClient creates a new MPC SDK client
@@ -50,7 +50,7 @@ func NewMPCClient(apiKey, apiSecret string, config *Config) (*MPCClient, error) 
 		Asset:        newService(apiClient),
 		Transaction:  newService(apiClient),
 		X402:         newService(apiClient),
-		Whitelist:    newService(apiClient),
+		SecurityFactor: newService(apiClient),
 	}
 
 	return client, nil
