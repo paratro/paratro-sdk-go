@@ -43,3 +43,7 @@ build/
 CLAUDE.md
 
 integration_local_test.godocs/
+
+# example build artifacts
+/complete
+/transfer
