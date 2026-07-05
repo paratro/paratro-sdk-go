@@ -58,23 +58,23 @@ type X402SettleStatusResponse struct {
 // X402Settlement represents an x402 authorization record.
 type X402Settlement struct {
 	SettlementID string  `json:"settlement_id"`
-	Status      string  `json:"status"`
-	FromAddress string  `json:"from_address"`
-	ToAddress   string  `json:"to_address"`
-	Chain       string  `json:"chain"`
-	Amount      string  `json:"amount"`
-	Nonce       string  `json:"x402_nonce"`
-	SignatureV  *int32  `json:"signature_v,omitempty"`
-	SignatureR  *string `json:"signature_r,omitempty"`
-	SignatureS  *string `json:"signature_s,omitempty"`
-	CreatedAt   string  `json:"created_at"`
+	Status       string  `json:"status"`
+	FromAddress  string  `json:"from_address"`
+	ToAddress    string  `json:"to_address"`
+	Chain        string  `json:"chain"`
+	Amount       string  `json:"amount"`
+	Nonce        string  `json:"x402_nonce"`
+	SignatureV   *int32  `json:"signature_v,omitempty"`
+	SignatureR   *string `json:"signature_r,omitempty"`
+	SignatureS   *string `json:"signature_s,omitempty"`
+	CreatedAt    string  `json:"created_at"`
 }
 
 // ListX402SettlementsResponse represents a paginated list of x402 authorizations.
 type ListX402SettlementsResponse struct {
 	Items   []*X402Settlement `json:"data"`
-	Total   int64                `json:"total"`
-	HasMore bool                 `json:"has_more"`
+	Total   int64             `json:"total"`
+	HasMore bool              `json:"has_more"`
 }
 
 // X402Sign creates an ERC-3009 authorization signature.

@@ -112,4 +112,3 @@ func (tm *tokenManager) refreshToken() (string, error) {
 
 	return tm.token, nil
 }
-
