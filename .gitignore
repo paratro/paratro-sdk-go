@@ -42,7 +42,8 @@ build/
 
 CLAUDE.md
 
-integration_local_test.godocs/
+integration_local_test.go
+docs/
 
 # example build artifacts
 /complete
