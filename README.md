@@ -82,7 +82,7 @@ func main() {
     // 3. Add asset
     _, err = client.Asset.CreateAsset(ctx, &paratro.CreateAssetRequest{
         AccountID: account.AccountID,
-        Symbol:    "USDT",
+        Symbol:    "USDC",
         Chain:     "ethereum",
     })
     if err != nil {
@@ -94,7 +94,7 @@ func main() {
         FromAddress: account.Address,
         ToAddress:   "0xbbbb...",
         Chain:       "ethereum",
-        TokenSymbol: "USDT",
+        TokenSymbol: "USDC",
         Amount:      "10.5",          // human-readable decimal
         ReferenceID: "order-2026-0001", // your business reference (idempotency)
     })

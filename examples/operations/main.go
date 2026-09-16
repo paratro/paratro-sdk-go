@@ -12,7 +12,7 @@
 //	export PARATRO_FROM=<your paying wallet address>
 //
 //	# TRANSFER
-//	export PARATRO_TO=0x... PARATRO_TOKEN=USDT PARATRO_AMOUNT=1.5
+//	export PARATRO_TO=0x... PARATRO_TOKEN=USDC PARATRO_AMOUNT=1.5
 //	go run ./examples/operations transfer
 //
 //	# PROGRAM_CALL (solana): counterparty-signed transaction, base64 or 0x-hex
@@ -79,7 +79,7 @@ func main() {
 			FromAddress: from,
 			ToAddress:   os.Getenv("PARATRO_TO"),
 			Chain:       env("PARATRO_CHAIN", "ethereum"),
-			TokenSymbol: env("PARATRO_TOKEN", "USDT"),
+			TokenSymbol: env("PARATRO_TOKEN", "USDC"),
 			Amount:      env("PARATRO_AMOUNT", "1.5"), // human-readable decimal
 			Memo:        "sdk operations example",
 			ReferenceID: referenceID,
