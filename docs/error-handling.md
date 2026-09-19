@@ -45,11 +45,17 @@ Shared (both operations):
 | Tag | Constant | Meaning |
 |---|---|---|
 | `counterparty_not_registered` | `ReasonCounterpartyNotRegistered` | destination (PROGRAM_CALL ATA owner / CONTRACT_CALL `incoming.to`, `outgoing.from`) not in `recipient_rules.counterparties` |
-| `limit_per_transaction` | `ReasonLimitPerTransaction` | the amount of the leg you pay — CONTRACT_CALL `incoming.amount`, PROGRAM_CALL your outgoing `TransferChecked` — exceeds that token's per-transaction limit (`asset_rules.limits[chain][token]`, or the legacy `single_limit`); detail in token units, e.g. `1 CORZx exceeds per-transaction limit 0.5 CORZx` |
-| `limit_daily` | `ReasonLimitDaily` | the UTC-day total of that same leg (CONTRACT_CALL `incoming`, PROGRAM_CALL your outgoing `TransferChecked`) plus this amount would exceed the token's daily limit (`limits[chain][token].daily`, or the legacy `daily_limit`); detail quotes remaining, limit and used in token units |
-| `limit_not_configured` | `ReasonLimitNotConfigured` | policy has neither an `asset_rules.limits` entry for the token nor `single_limit` / `daily_limit` (fail closed) |
-| `limit_decimals_ambiguous` | `ReasonLimitDecimalsAmbiguous` | legacy path only: the tokens without a `limits` entry have different decimals, so one raw `single_limit` / `daily_limit` cannot apply |
+| `limit_per_transaction` | `ReasonLimitPerTransaction` | the amount of the leg you pay — CONTRACT_CALL `incoming.amount`, PROGRAM_CALL your outgoing `TransferChecked` — exceeds that token's per-transaction limit (`asset_rules.limits[chain][token].single`, token units); detail in token units, e.g. `1 CORZx exceeds per-transaction limit 0.5 CORZx` |
+| `limit_daily` | `ReasonLimitDaily` | the UTC-day total of that same leg (CONTRACT_CALL `incoming`, PROGRAM_CALL your outgoing `TransferChecked`) plus this amount would exceed the token's daily limit (`limits[chain][token].daily`); detail quotes remaining, limit and used in token units |
+| `limit_not_configured` | `ReasonLimitNotConfigured` | the policy has no `asset_rules.limits[chain][token]` entry for the token you pay (fail closed - there is no policy-wide fallback); the detail names the token and the key to add, e.g. `no limit configured for CORZx (0x2AF6…769f) on ethereum; add asset_rules.limits.ethereum.0x2af631a63a32dba1974c231714fdd41c5807769f = {single, daily} in token units` |
 | `limit_invalid` | no constant in 1.8.1 - compare the string; `ReasonTag()` still returns it | the token's `asset_rules.limits` entry does not convert to a whole number of smallest units at the token's registered decimals |
+
+`ReasonLimitDecimalsAmbiguous` (`limit_decimals_ambiguous`) is no longer emitted:
+the policy-wide smallest-unit `single_limit` / `daily_limit` it guarded were
+removed on 2026-09-19 without a compatibility path (every token now has its own
+`asset_rules.limits` entry, and a policy that still carries the old keys is
+rejected as a whole with `403`). The constant stays in 1.8.1 only so existing
+code keeps compiling.
 
 PROGRAM_CALL (Solana):
 

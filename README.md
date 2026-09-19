@@ -151,8 +151,8 @@ in), only System / Token / Token-2022 / ATA / Memo programs and all of them in
 the policy's `allowed_programs`, no Address Lookup Tables, your wallet in the
 fee-payer slot with an empty signature, destination ATA owned by a policy
 counterparty, both mints in `allowed_mints`, amount within the outgoing mint's
-policy limit (`asset_rules.limits.solana[mint]` in token units, or the legacy
-smallest-unit `single_limit` / `daily_limit` when the mint has no entry).
+policy limit (`asset_rules.limits.solana[mint]` in token units; a mint without
+an entry is rejected with `limit_not_configured`).
 
 ### CONTRACT_CALL (EVM, xChange `executeSwap`)
 

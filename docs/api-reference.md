@@ -64,8 +64,8 @@ destination ATA owned by a policy counterparty; incoming destination = ATA of
 `receive_address`; both mints in `asset_rules.allowed_mints` and registered;
 the outgoing amount (the leg you pay) ≤ the outgoing mint's per-transaction
 limit, daily total ≤ its daily limit (`asset_rules.limits.solana[mint]` in
-token units, or the legacy smallest-unit `single_limit` / `daily_limit` when
-the mint has no entry); the incoming leg is not limit-checked.
+token units; a mint without an entry is `limit_not_configured`); the incoming
+leg is not limit-checked.
 `tx_hash` = `signatures[0]`.
 
 #### `ContractCallRequest` (`operation=CONTRACT_CALL`, EVM chains)
@@ -75,7 +75,7 @@ the mint has no entry); the incoming leg is not limit-checked.
 | `receive_address` | `ReceiveAddress` | optional, = `outgoing.to`; default = from_address |
 | `contract_call.quote_id` | `ContractCall.QuoteID` | bytes32 hex, 0x optional |
 | `contract_call.expiration` | `ContractCall.Expiration` | unix seconds; future, ≤ now + `fee_limits.max_execution_timeout_seconds` |
-| `contract_call.incoming.{to,token,amount}` | `ContractCall.Incoming` | you → counterparty — the leg the limits apply to; `to` ∈ `counterparties`, `token` ∈ `payment_tokens`, amount (smallest unit) ≤ the token's per-transaction limit and daily ≤ its daily limit (`asset_rules.limits[chain][token]` in token units, or the legacy `single_limit` / `daily_limit`) |
+| `contract_call.incoming.{to,token,amount}` | `ContractCall.Incoming` | you → counterparty — the leg the limits apply to; `to` ∈ `counterparties`, `token` ∈ `payment_tokens`, amount (smallest unit) ≤ the token's per-transaction limit and daily ≤ its daily limit (`asset_rules.limits[chain][token]` in token units; no entry → `limit_not_configured`) |
 | `contract_call.outgoing.{from,to,token,amount}` | `ContractCall.Outgoing` | counterparty → you; `from` ∈ `counterparties`, `to` = your wallet, `token` ∈ `target_tokens`; not limit-checked |
 | `contract_call.counterparty_signature` | `ContractCall.CounterpartySignature` | EIP-712 signature (hex); verified by the contract, not the gateway |
 | `contract_call.permit_deadline` | `ContractCall.PermitDeadline` | optional; 0 → now + min(`max_permit_lifetime_seconds`, 300) |
@@ -199,8 +199,11 @@ Body: `{"code":"invalid_parameter","type":"endpoint_retired","message":"This end
 `PROGRAM_CALL` / `CONTRACT_CALL` are only allowed when the client has an
 `OPERATION_RULES` policy (action `AUTO_APPROVE`) covering the operation and
 chain. Rule JSON - request amounts are smallest-unit integers; `asset_rules.limits`
-is per token in **token units**, the legacy `single_limit` / `daily_limit` are
-smallest-unit integers used only for tokens without a `limits` entry:
+is the only limit configuration: one entry per token you pay with, `single` and
+`daily` both required, in **token units**. The pre-2026-09-19 policy-wide
+smallest-unit `single_limit` / `daily_limit` were removed without a compatibility
+path - a policy that still carries them is rejected as a whole (`403`) until it
+is rewritten with `limits`:
 
 ```json
 {
@@ -219,16 +222,15 @@ smallest-unit integers used only for tokens without a `limits` entry:
     "limits": {
       "ethereum": { "0x…": { "single": "50", "daily": "200" } },
       "solana":   { "…":  { "single": "50", "daily": "200" } }
-    },
-    "single_limit": "50000000",
-    "daily_limit":  "200000000"
+    }
   },
   "fee_limits": { "max_execution_timeout_seconds": 900, "max_permit_lifetime_seconds": 600 }
 }
 ```
 
-Missing limits fail closed (`Rejected: limit_not_configured`); a `limits` entry
-that does not convert to a whole number of smallest units at the token's
-registered decimals is `Rejected: limit_invalid`. Registration (counterparty,
-tokens, mints) is checked before the limits. Policy updates require
-`expected_revision` (409 on conflict).
+A token without a `limits` entry fails closed (`Rejected: limit_not_configured`;
+the detail names the token and the `asset_rules.limits.<chain>.<token>` key to
+add); a `limits` entry that does not convert to a whole number of smallest units
+at the token's registered decimals is `Rejected: limit_invalid`. Registration
+(counterparty, tokens, mints) is checked before the limits. Policy updates
+require `expected_revision` (409 on conflict).
