@@ -62,7 +62,10 @@ System / Token / Token-2022 / ATA / Memo programs, all in policy
 fee-payer slot (`AccountKeys[0]`) with an empty signature slot; outgoing
 destination ATA owned by a policy counterparty; incoming destination = ATA of
 `receive_address`; both mints in `asset_rules.allowed_mints` and registered;
-amount ≤ `single_limit`, daily total ≤ `daily_limit`. `tx_hash` = `signatures[0]`.
+amount ≤ the outgoing mint's per-transaction limit, daily total ≤ its daily
+limit (`asset_rules.limits.solana[mint]` in token units, or the legacy
+smallest-unit `single_limit` / `daily_limit` when the mint has no entry).
+`tx_hash` = `signatures[0]`.
 
 #### `ContractCallRequest` (`operation=CONTRACT_CALL`, EVM chains)
 
@@ -71,12 +74,13 @@ amount ≤ `single_limit`, daily total ≤ `daily_limit`. `tx_hash` = `signature
 | `receive_address` | `ReceiveAddress` | optional, = `outgoing.to`; default = from_address |
 | `contract_call.quote_id` | `ContractCall.QuoteID` | bytes32 hex, 0x optional |
 | `contract_call.expiration` | `ContractCall.Expiration` | unix seconds; future, ≤ now + `fee_limits.max_execution_timeout_seconds` |
-| `contract_call.incoming.{to,token,amount}` | `ContractCall.Incoming` | you → counterparty; `to` ∈ `counterparties`, `token` ∈ `payment_tokens`, amount ≤ `single_limit` and daily ≤ `daily_limit` |
+| `contract_call.incoming.{to,token,amount}` | `ContractCall.Incoming` | you → counterparty; `to` ∈ `counterparties`, `token` ∈ `payment_tokens`, amount (smallest unit) ≤ the token's per-transaction limit and daily ≤ its daily limit (`asset_rules.limits[chain][token]` in token units, or the legacy `single_limit` / `daily_limit`) |
 | `contract_call.outgoing.{from,to,token,amount}` | `ContractCall.Outgoing` | counterparty → you; `from` ∈ `counterparties`, `to` = your wallet, `token` ∈ `target_tokens` |
 | `contract_call.counterparty_signature` | `ContractCall.CounterpartySignature` | EIP-712 signature (hex); verified by the contract, not the gateway |
 | `contract_call.permit_deadline` | `ContractCall.PermitDeadline` | optional; 0 → now + min(`max_permit_lifetime_seconds`, 300) |
 
-Amounts are smallest-unit decimal integer strings. The contract address comes
+Amounts are smallest-unit decimal integer strings (only `TRANSFER` amounts are
+in token units). The contract address comes
 from the policy (`call_rules.allowed_contracts[chain]`), never from the request.
 Native value is always 0. `from_address` is `incoming.from`, the permit owner
 and the sender - the quote must be generated for it.
@@ -193,7 +197,9 @@ Body: `{"code":"invalid_parameter","type":"endpoint_retired","message":"This end
 
 `PROGRAM_CALL` / `CONTRACT_CALL` are only allowed when the client has an
 `OPERATION_RULES` policy (action `AUTO_APPROVE`) covering the operation and
-chain. Rule JSON (amounts are smallest-unit integers):
+chain. Rule JSON - request amounts are smallest-unit integers; `asset_rules.limits`
+is per token in **token units**, the legacy `single_limit` / `daily_limit` are
+smallest-unit integers used only for tokens without a `limits` entry:
 
 ```json
 {
@@ -209,6 +215,10 @@ chain. Rule JSON (amounts are smallest-unit integers):
     "allowed_mints":  { "solana":   ["…"] },
     "payment_tokens": { "ethereum": ["0x…"] },
     "target_tokens":  { "ethereum": ["0x…"] },
+    "limits": {
+      "ethereum": { "0x…": { "single": "50", "daily": "200" } },
+      "solana":   { "…":  { "single": "50", "daily": "200" } }
+    },
     "single_limit": "50000000",
     "daily_limit":  "200000000"
   },
@@ -216,5 +226,8 @@ chain. Rule JSON (amounts are smallest-unit integers):
 }
 ```
 
-Missing limits fail closed (`Rejected: limit_not_configured`). Policy updates
-require `expected_revision` (409 on conflict).
+Missing limits fail closed (`Rejected: limit_not_configured`); a `limits` entry
+that does not convert to a whole number of smallest units at the token's
+registered decimals is `Rejected: limit_invalid`. Registration (counterparty,
+tokens, mints) is checked before the limits. Policy updates require
+`expected_revision` (409 on conflict).

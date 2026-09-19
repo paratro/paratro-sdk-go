@@ -150,8 +150,9 @@ instructions (Memo + your `TransferChecked` out + counterparty `TransferChecked`
 in), only System / Token / Token-2022 / ATA / Memo programs and all of them in
 the policy's `allowed_programs`, no Address Lookup Tables, your wallet in the
 fee-payer slot with an empty signature, destination ATA owned by a policy
-counterparty, both mints in `allowed_mints`, amount within `single_limit` /
-`daily_limit`.
+counterparty, both mints in `allowed_mints`, amount within the outgoing mint's
+policy limit (`asset_rules.limits.solana[mint]` in token units, or the legacy
+smallest-unit `single_limit` / `daily_limit` when the mint has no entry).
 
 ### CONTRACT_CALL (EVM, xChange `executeSwap`)
 
@@ -176,9 +177,14 @@ resp, err := client.Transaction.CreateTransaction(ctx, &paratro.ContractCallRequ
 })
 ```
 
-Amounts are **smallest-unit integer strings**. The contract address is **not
-part of the request** - the gateway takes it from the policy's
-`call_rules.allowed_contracts[chain]` - and the native value is always 0.
+Amounts are **smallest-unit integer strings** (unlike `TRANSFER`, whose amount
+is in token units). The contract address is **not part of the request** - the
+gateway takes it from the policy's `call_rules.allowed_contracts[chain]` - and
+the native value is always 0. Policy limits are authored per token in token
+units (`asset_rules.limits[chain][token]`, e.g. `"0.5"`); the gateway converts
+them with the token's registered decimals, checks registration before limits,
+and limit rejections quote both sides in token units
+(`limit_per_transaction: 1 CORZx exceeds per-transaction limit 0.5 CORZx`).
 
 ### Handling 202 (outcome unknown)
 
