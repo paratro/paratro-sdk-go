@@ -62,9 +62,10 @@ System / Token / Token-2022 / ATA / Memo programs, all in policy
 fee-payer slot (`AccountKeys[0]`) with an empty signature slot; outgoing
 destination ATA owned by a policy counterparty; incoming destination = ATA of
 `receive_address`; both mints in `asset_rules.allowed_mints` and registered;
-amount ≤ the outgoing mint's per-transaction limit, daily total ≤ its daily
-limit (`asset_rules.limits.solana[mint]` in token units, or the legacy
-smallest-unit `single_limit` / `daily_limit` when the mint has no entry).
+the outgoing amount (the leg you pay) ≤ the outgoing mint's per-transaction
+limit, daily total ≤ its daily limit (`asset_rules.limits.solana[mint]` in
+token units, or the legacy smallest-unit `single_limit` / `daily_limit` when
+the mint has no entry); the incoming leg is not limit-checked.
 `tx_hash` = `signatures[0]`.
 
 #### `ContractCallRequest` (`operation=CONTRACT_CALL`, EVM chains)
@@ -74,8 +75,8 @@ smallest-unit `single_limit` / `daily_limit` when the mint has no entry).
 | `receive_address` | `ReceiveAddress` | optional, = `outgoing.to`; default = from_address |
 | `contract_call.quote_id` | `ContractCall.QuoteID` | bytes32 hex, 0x optional |
 | `contract_call.expiration` | `ContractCall.Expiration` | unix seconds; future, ≤ now + `fee_limits.max_execution_timeout_seconds` |
-| `contract_call.incoming.{to,token,amount}` | `ContractCall.Incoming` | you → counterparty; `to` ∈ `counterparties`, `token` ∈ `payment_tokens`, amount (smallest unit) ≤ the token's per-transaction limit and daily ≤ its daily limit (`asset_rules.limits[chain][token]` in token units, or the legacy `single_limit` / `daily_limit`) |
-| `contract_call.outgoing.{from,to,token,amount}` | `ContractCall.Outgoing` | counterparty → you; `from` ∈ `counterparties`, `to` = your wallet, `token` ∈ `target_tokens` |
+| `contract_call.incoming.{to,token,amount}` | `ContractCall.Incoming` | you → counterparty — the leg the limits apply to; `to` ∈ `counterparties`, `token` ∈ `payment_tokens`, amount (smallest unit) ≤ the token's per-transaction limit and daily ≤ its daily limit (`asset_rules.limits[chain][token]` in token units, or the legacy `single_limit` / `daily_limit`) |
+| `contract_call.outgoing.{from,to,token,amount}` | `ContractCall.Outgoing` | counterparty → you; `from` ∈ `counterparties`, `to` = your wallet, `token` ∈ `target_tokens`; not limit-checked |
 | `contract_call.counterparty_signature` | `ContractCall.CounterpartySignature` | EIP-712 signature (hex); verified by the contract, not the gateway |
 | `contract_call.permit_deadline` | `ContractCall.PermitDeadline` | optional; 0 → now + min(`max_permit_lifetime_seconds`, 300) |
 

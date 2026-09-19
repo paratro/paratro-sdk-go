@@ -185,6 +185,8 @@ units (`asset_rules.limits[chain][token]`, e.g. `"0.5"`); the gateway converts
 them with the token's registered decimals, checks registration before limits,
 and limit rejections quote both sides in token units
 (`limit_per_transaction: 1 CORZx exceeds per-transaction limit 0.5 CORZx`).
+The leg that is limit-checked is the one you pay: `incoming` for CONTRACT_CALL,
+your outgoing `TransferChecked` for PROGRAM_CALL.
 
 ### Handling 202 (outcome unknown)
 

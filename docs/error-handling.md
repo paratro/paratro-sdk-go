@@ -45,8 +45,8 @@ Shared (both operations):
 | Tag | Constant | Meaning |
 |---|---|---|
 | `counterparty_not_registered` | `ReasonCounterpartyNotRegistered` | destination (PROGRAM_CALL ATA owner / CONTRACT_CALL `incoming.to`, `outgoing.from`) not in `recipient_rules.counterparties` |
-| `limit_per_transaction` | `ReasonLimitPerTransaction` | outgoing amount > the token's per-transaction limit (`asset_rules.limits[chain][token]`, or the legacy `single_limit`); detail in token units, e.g. `1 CORZx exceeds per-transaction limit 0.5 CORZx` |
-| `limit_daily` | `ReasonLimitDaily` | UTC-day total would exceed the token's daily limit (`limits[chain][token].daily`, or the legacy `daily_limit`); detail quotes remaining, limit and used in token units |
+| `limit_per_transaction` | `ReasonLimitPerTransaction` | the amount of the leg you pay — CONTRACT_CALL `incoming.amount`, PROGRAM_CALL your outgoing `TransferChecked` — exceeds that token's per-transaction limit (`asset_rules.limits[chain][token]`, or the legacy `single_limit`); detail in token units, e.g. `1 CORZx exceeds per-transaction limit 0.5 CORZx` |
+| `limit_daily` | `ReasonLimitDaily` | the UTC-day total of that same leg (CONTRACT_CALL `incoming`, PROGRAM_CALL your outgoing `TransferChecked`) plus this amount would exceed the token's daily limit (`limits[chain][token].daily`, or the legacy `daily_limit`); detail quotes remaining, limit and used in token units |
 | `limit_not_configured` | `ReasonLimitNotConfigured` | policy has neither an `asset_rules.limits` entry for the token nor `single_limit` / `daily_limit` (fail closed) |
 | `limit_decimals_ambiguous` | `ReasonLimitDecimalsAmbiguous` | legacy path only: the tokens without a `limits` entry have different decimals, so one raw `single_limit` / `daily_limit` cannot apply |
 | `limit_invalid` | no constant in 1.8.1 - compare the string; `ReasonTag()` still returns it | the token's `asset_rules.limits` entry does not convert to a whole number of smallest units at the token's registered decimals |
